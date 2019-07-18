@@ -1,0 +1,16 @@
+{
+  "name": "sass-test",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "saas:dev": "cypress open --env env=saasdev",
+    "admin:dev": "cypress open --env env=admindev"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "cypress": "^3.4.0",
+    "mockjs": "^1.0.1-beta3"
+  }
+}
