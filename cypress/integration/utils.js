@@ -7,8 +7,18 @@ export function radio(label, choice) {
   cy.contains(label).parent().contains(choice).click();
 }
 
-export function select(label, choice) {
+export function selectByName(label, choice) {
+  cy.contains(label).parent().find('input').click({force: true});
+  cy.get('div[x-placement]').within(() => {
+    cy.contains(choice).click();
+  });
+}
 
+export function selectByIndex(label, index) {
+  cy.contains(label).parent().find('input').click({force: true});
+  cy.get('div[x-placement]').within(() => {
+    cy.get('li.el-select-dropdown__item').eq(index).click();
+  })
 }
 export function date(label) {
 
