@@ -34,3 +34,18 @@ export function address(label) {
     cy.contains('东城区').click();
   })
 }
+
+export function getQuery(url) {
+  let re = /\?.+/, result = re.exec(url);
+  if (result) {
+    let text = result[0].slice(1), keyValue = text.split('&'), answer = {};
+    keyValue.forEach(item => {
+      let cur = item.split('=');
+      answer[cur[0]] = cur[1];
+    })
+    return answer
+  } else {
+    return {};
+  }
+
+}
