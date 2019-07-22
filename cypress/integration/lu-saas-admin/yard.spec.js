@@ -15,7 +15,7 @@ function share(label, money, percent) {
 }
 
 context("场地管理", function() {
-  it.skip("登录", function() {
+  it("登录", function() {
     cy.visit('');
     cy.server();
     cy.route('post', /login/).as('login');
@@ -24,7 +24,7 @@ context("场地管理", function() {
     cy.contains("登录").click();
     cy.wait('@login');
   });
-  it.skip('新建场地,选单体, 一条分成比例', function() {
+  it('新建场地,选单体, 一条分成比例', function() {
     cy.server();
     cy.route('post', /yard\/add/).as('addYard');
     cy.route('get', /yard\/list/).as('getYardList');
@@ -54,7 +54,7 @@ context("场地管理", function() {
   });
 
 
-  it.skip('新建场地, 选择单体，随机条数比例', function() {
+  it('新建场地, 选择单体，随机条数比例', function() {
     cy.server();
     cy.route('post', /yard\/add/).as('addYard');
     cy.route('get', /yard\/list/).as('getYardList');
