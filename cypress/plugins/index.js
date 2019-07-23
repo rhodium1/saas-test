@@ -15,8 +15,10 @@ module.exports = (on, config) => {
   // `on` is used to hook into various events Cypress emits
   // `config` is the resolved Cypress config
   const env = config.env.env, urlMap = {
-    saasdev: 'http://localhost:1314',
-    admindev: 'http://localhost:1315'
+    saaslocal: 'http://localhost:1314',
+    adminlocal: 'http://localhost:1315',
+    adminqa: 'http://general-qa.icjl.net',
+    saasqa: 'http://agent-qa.icjl.net'
   };
   config.baseUrl = urlMap[env];
   return config;
