@@ -1,8 +1,9 @@
 import Mock from 'mockjs';
 import * as Util from '../utils';
+
 const R = Mock.Random;
 const $ = Cypress.$;
-context.skip('登录', function() {
+context('登录', function() {
   it('登录', function() {
     cy.visit('');
     cy.server();
@@ -40,7 +41,7 @@ context('资金对账', function() {
 
     });
   })
-  context('支付代收', function(){
+  context.skip('支付代收', function(){
     it.skip('页面正常显示', function() {
       cy.server();
       cy.route('get', /payment\/collection/).as('getList');
@@ -77,4 +78,157 @@ context('资金对账', function() {
       });
     });
   });
+  context('运营商结算', function() {
+    it.skip('初次加载时接口请求正确', function() {
+      cy.server();
+      cy.route('get', /tenant\/settle/).as('getList');
+      cy.visit('/#/finance/checking/balance');
+      cy.wait('@getList').then(xhr => {
+        console.log(xhr);
+        let query = Util.getQuery(xhr.url);
+        expect(query.type).to.eq('0');
+        expect(query.page).to.eq('1');
+        expect(query.size).to.eq('15');
+      });
+    });
+    it.skip('进行搜索时，检查参数是否正确', function() {
+      cy.server();
+      cy.route('get', /tenant\/settle/).as('getList');
+      cy.get('div.el-select').find('input').click();
+      let index = R.integer(0, 2), name = R.cname();
+      cy.get('div[x-placement]').find('li').eq(index).click();
+      cy.get('input[placeholder=请输入主体名称]').type(name, { force: true });
+      cy.contains('搜索').click();
+      cy.wait('@getList').then(xhr => {
+        console.log(xhr);
+        let query = Util.getQuery(xhr.url);
+        expect(query.type).to.eq(`${index}`);
+        expect(query.search).to.eq(name);
+        expect(query.page).to.eq('1');
+        expect(query.size).to.eq('15');
+      });
+    });
+    it.skip('导出excel', function() {
+      cy.server();
+      cy.route('get', /tenant\/settle/).as('getList');
+      cy.route('get',/export\/tenant_excel/).as('exportExcel')
+      cy.visit('/#/finance/checking/balance');
+      cy.wait('@getList');
+      cy.contains('导出excel').click();
+      cy.wait('@exportExcel');
+    });
+  });
+  context.skip('运营商结算记录', function() {
+    it('显示正确', function() {
+      cy.server();
+      let mockData = {
+        success: true,
+        code: 200,
+        data: {
+          num: R.integer(1, 1000),
+          list: []
+        }
+      };
+      for(let i = 0; i < 15; i++) {
+        mockData.data.list.push({
+          settlement_time: R.date('yyyy-mm-dd'),
+          settlement_money: R.float(0, 1000, 2, 2),
+          gathering_account: {
+            bank: R.ctitle(),
+            bank_account: R.increment(1000, 10000),
+            payee: R.cname()
+          },
+          settlement_state: R.cname()
+        });
+      }
+      cy.route('get', /tenant\/settle\?/).as('getList')
+      cy.route('get', /tenant\/settle\/log/, mockData).as('getLogList');
+      cy.visit('/#/finance/checking/balance');
+      cy.wait('@getList')
+      cy.contains('结算记录').click({force: true});
+      cy.wait('@getLogList');
+    })
+  });
+  context('结算管理', function() {
+    it.skip('显示正确', function() {
+      cy.server();
+      cy.route('get', /settlement\/account\/list/).as('getList');
+      cy.visit('/#/finance/manage/list');
+      cy.wait('@getList');
+    });
+    it.skip('账户详情，字段带入正确', function() {
+      cy.server();
+      cy.route('get', /settlement\/account\/list/).as('getList');
+      let bank_account = R.ctitle(), open_account_bank = R.ctitle(), open_account_city = R.ctitle(), open_account_name = R.ctitle(), open_account_subbranch = R.ctitle();
+      let mockData = {
+        success: true,
+        code: 200,
+        data: {
+          bank_account,
+          open_account_bank,
+          open_account_city,
+          open_account_name,
+          open_account_subbranch 
+        }
+      };
+      cy.route('get', /settlement\/account\/detail/, mockData).as('getDetail');
+      cy.visit('/#/finance/manage/list');
+      cy.wait('@getList');
+      cy.contains('结算账户详情').click({force: true});
+      cy.wait('@getDetail');
+      cy.contains('开户名称').parent().find('input').then(el => {
+        expect($(el).val()).to.eq(open_account_name);
+      });
+      cy.contains('开户银行').parent().find('input').then(el => {
+        expect($(el).val()).to.eq(open_account_bank);
+      });
+      cy.contains('开户银行城市').parent().find('input').then(el => {
+        expect($(el).val()).to.eq(open_account_city);
+      });
+      cy.contains('开户支行').parent().find('input').then(el => {
+        expect($(el).val()).to.eq(open_account_subbranch);
+      });
+      cy.contains('银行账号').parent().find('input').then(el => {
+        expect($(el).val()).to.eq(bank_account);
+      });
+    });
+    it('费用结算, 显示正确', function() {
+      cy.server();
+      let mockData = {
+        success: true,
+        code: 200,
+        data: {
+          statis: {
+            machine_total: R.integer(0, 1000),
+            order_total: R.integer(0, 100),
+            refund_money: R.integer(0, 100),
+            net_income: R.integer(0, 100),
+            place_net_income: R.integer(0, 100),
+            place_service_fee: R.integer(0, 100)
+          },
+          list: []
+        }
+      };
+      let types = ['租赁', '购买'], states = ['待结算', '已结算'];
+      for(let i = 0; i < 5; i++) {
+        mockData.data.list.push({
+          tenant_name: R.cname(),
+          type: R.cname(),
+          model: types[R.integer(0, 1)],
+          sign_time: R.date('yyyy-MM-dd'),
+          order_money: R.integer(0, 1000),
+          refund_money: R.integer(0, 1000),
+          settlement_state: states[R.integer(0, 1)],
+          tenant_net_income: R.integer(0, 1000),
+          tenant_service_fee: R.integer(0, 1000),
+          machine_total: R.integer(0, 1000)
+        })
+      }
+      cy.route('get', /settlement\/list/, mockData).as('getList');
+      cy.visit('/#/finance/manage/fee');
+      cy.wait('@getList');
+    });
+  });
+
+
 })
