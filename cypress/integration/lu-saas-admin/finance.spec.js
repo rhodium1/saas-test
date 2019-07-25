@@ -3,7 +3,7 @@ import * as Util from '../utils';
 import moment from 'moment';
 const R = Mock.Random;
 const $ = Cypress.$;
-context.skip('登录', function() {
+context('登录', function() {
   it('登录', function() {
     cy.visit('');
     cy.server();
@@ -116,7 +116,7 @@ context('结算管理', function() {
         })
       }
       cy.route('get', /settlement\/list/, mockData).as('getStatis');
-      cy.route('get', /general\/v1\/settlement\/tenant_summary/, listMock).as('getList');
+      cy.route('get', /general\/v1\/settlement\/tenant_summary/).as('getList');
       cy.visit('/#/finance/manage/fee');
       cy.wait('@getStatis').then(xhr => {
         let query = Util.getQuery(xhr.url);
@@ -129,7 +129,9 @@ context('结算管理', function() {
         expect(query.month).to.eq(moment().format('YYYYMM'))
       });
     });
+    it('', function() {
 
+    });
   });
   it.skip('显示正确', function() {
     cy.server();
