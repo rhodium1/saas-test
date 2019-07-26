@@ -44,13 +44,14 @@ context("场地管理", function() {
     Util.type('商圈', R.ctitle());
     share('分成比例1', '100', '50');
     cy.contains('保存').click();
-    cy.wait('@addYard');
+    cy.wait('@addYard').then(xhr => {
+      expect(xhr.responseBody.code).eq(200);
+    });
     cy.wait('@getYardList');
     cy.get('input[placeholder=请输入场地名称]').type(title, {force: true});
     cy.contains('查询').click();
     cy.wait('@getYardList');
     cy.get('#area > div > div:nth-child(4)').contains(title);
-    cy.contains(title);
   });
 
 
@@ -87,7 +88,41 @@ context("场地管理", function() {
     cy.get('#area > div > div:nth-child(4)').contains(title);
     cy.contains(title);
   });
+  // it('新建场地后，编辑场地，带入初始数据', function() {
+  //   cy.server();
+  //   cy.route('post', /yard\/add/).as('addYard');
+  //   cy.route('get', /yard\/list/).as('getYardList');
+  //   cy.visit('/#/configs/area/list');
+  //   cy.contains(' 新建场地').click({ force: true });
+  //   cy.get("form.el-form").contains('运营商').parent().find('input').click({force: true});
+  //   cy.get('div[x-placement]').within(() => {
+  //     cy.get('li.el-select-dropdown__item').eq(0).click();
+  //   });
+  //   let title = R.ctitle();
+  //   Util.type('场地名称', title);
+  //   Util.radio('类型', '单体');
+  //   Util.address("省市区");
+  //   Util.type('详细地址', R.county());
+  //   Util.type('联系人', R.cname());
+  //   Util.type('联系电话', '13322466923');
+  //   Util.type('商圈', R.ctitle());
+  //   let len = R.integer(1, 10);
+  //   share('分成比例1', 10, 10);
+  //   for(let i = 0; i < len; i++) {
+  //     cy.get('span.plus-words').first().click();
+  //     share('分成比例' + (i + 2), 100 * (i + 1), (50 + i));
+  //   }
+  //   cy.contains('保存').click();
+  //   cy.wait('@addYard');
+  //   cy.wait('@getYardList');
+  //   cy.get('input[placeholder=请输入场地名称]').type(title, {force: true});
+  //   cy.contains('查询').click();
+  //   cy.wait('@getYardList');
+  //   cy.get('#area > div > div:nth-child(4)').contains(title);
+  //   cy.contains(title);
+  //   cy.contains('编辑').click();
 
+  // });
   it('新建场地, 选择集团, 添加集团', function() {
     cy.server();
     cy.route('post', /yard\/add/).as('addYard');
@@ -132,13 +167,17 @@ context("场地管理", function() {
       share('分成比例' + (i + 2), 100 * (i + 1), (50 + i));
     }
     cy.contains('保存').click();
-    cy.wait('@addYard');
+    cy.wait('@addYard').then(xhr => {
+      expect(xhr.responseBody.code).to.eq(200);
+    });
     cy.wait('@getYardList');
   });
   it('新建场地之后,搜索,点击编辑', function() {
     cy.server();
     cy.route('post', /yard\/add/).as('addYard');
     cy.route('get', /yard\/list/).as('getYardList');
+    cy.route('get', /common\/district/).as('getDistrict');
+    cy.route('get', /yard\/info/).as('getInfo');
     cy.visit('/#/configs/area/list');
     cy.contains(' 新建场地').click({ force: true });
     cy.get("form.el-form").contains('运营商').parent().find('input').click({force: true});
@@ -155,12 +194,28 @@ context("场地管理", function() {
     Util.type('商圈', R.ctitle());
     share('分成比例1', '100', '50');
     cy.contains('保存').click();
-    cy.wait('@addYard');
+    cy.wait('@addYard').then(xhr => {
+      expect(xhr.responseBody.code).to.eq(200);
+    });
     cy.wait('@getYardList');
     cy.get('input[placeholder=请输入场地名称]').type(title, { force: true });
     cy.contains('查询').click();
     cy.wait('@getYardList');
-    // cy.contains('编辑').click();
+    cy.contains('编辑').click();
+    cy.wait('@getDistrict');
+    let detailAddress, phone
+    cy.wait('@getInfo').then(xhr => {
+      expect(xhr.responseBody.code).eq(200);
+      detailAddress = xhr.responseBody.data.industry;
+      phone = xhr.requestBody.data.mobile;
+    });
+    cy.contains('详细地址').parent().find('input').then(el => {
+      expect($(el).val()).to.eq(detailAddress);
+    });
+    cy.contains('联系电话').parent().find('input').then(el => {
+      expect($(el).val()).to.eq(phone);
+    })
+
   });
   it('删除场地', function() {
     cy.server();
@@ -180,16 +235,73 @@ context("场地管理", function() {
     cy.contains('删除').click();
     cy.get('.el-button').contains('确定').click();
     // cy.wait('getYardList');
-    cy.wait('@deleteYard');
+    cy.wait('@deleteYard').then(xhr => {
+      expect(xhr.responseBody.code).to.eq(200);
+    });
   });
   
-  it('编辑时，运营商不可编辑', function() {
+  it("绑定机器", function() {
     cy.server();
     cy.route('get', /yard\/list/).as('getYardList');
+    cy.route('get', /yard\/machine_list/).as('getMachineList');
+    cy.route('post', /yard\/bind/).as('bind');
     cy.visit('/#/configs/area/list');
     cy.wait('@getYardList');
-    cy.contains('编辑').click();
-    cy.get('#area > div > form > div:nth-child(1) > div:nth-child(1) > div:nth-child(1) > div > div > div.el-input.is-disabled.el-input--suffix > input')
-      .should('have.attr', 'disabled').and('eq', 'disabled');
+    cy.contains('绑定机器').click();
+    let codes = [];
+    cy.wait('@getMachineList').then(xhr => {
+      expect(xhr.responseBody.code).to.eq(200);
+      let data = xhr.responseBody.data;
+      data.forEach(item => {
+        codes.push(item.machine_code);
+      });
+    });
+    if(codes.length > 0) {
+      cy.contains('全选').click();
+      cy.get('.el-dialog__footer').contains('绑定').click({force: true});
+      cy.wait('@bind').then(xhr => {
+        let rData = xhr.requestBody;
+        expect(xhr.requestBody.machine_codes).to.eq(codes.join(','));
+        expect(rData.type).to.eq(1);
+        expect(rData).to.have.property('place_id');
+        expect(rData).to.have.property('tenant_id');
+        expect(rData).to.have.property('place_type');
+        expect(xhr.responseBody.code).to.eq(200);
+      });
+    }
+
   });
+  it.only('解绑机器', function() {
+    cy.server();
+    cy.route('get', /yard\/list/).as('getYardList');
+    cy.route('get', /yard\/machine_list/).as('getMachineList');
+    cy.route('post', /yard\/bind/).as('bind');
+    cy.visit('/#/configs/area/list');
+    cy.wait('@getYardList');
+    cy.contains('解绑机器').click();
+    let codes = [];
+    cy.wait('@getMachineList').then(xhr => {
+      let query = Util.getQuery(xhr.url);
+      expect(query).to.have.property('tenant_id');
+      expect(query.type).to.eq('2');
+      expect(xhr.responseBody.code).to.eq(200);
+      let data = xhr.responseBody.data;
+      data.forEach(item => {
+        codes.push(item.machine_code);
+      });
+    });
+    if(codes.length > 0) {
+      cy.contains('全选').click();
+      cy.get('.el-dialog__footer').contains('解绑').click({force: true});
+      cy.wait('@bind').then(xhr => {
+        let rData = xhr.requestBody;
+        expect(xhr.requestBody.machine_codes).to.eq(codes.join(','));
+        expect(rData.type).to.eq(2);
+        expect(rData).to.have.property('place_id');
+        expect(rData).to.have.property('tenant_id');
+        expect(rData).to.have.property('place_type');
+        expect(xhr.responseBody.code).to.eq(200);
+      });
+    }
+  })
 });

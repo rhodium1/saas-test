@@ -44,7 +44,7 @@ context('设备管理', function() {
       cy.route('get', /device\/list/, {
         code: 200,
         success: true,
-        data
+        // data
       }).as('getList');
       cy.visit('/#/device/list/list');
       cy.wait('@getList');
@@ -55,11 +55,11 @@ context('设备管理', function() {
       cy.route({
         method: "GET",
         url: /device\/list/,
-        response: {
-          code: 200,
-          success: true,
-          data: createMachineList()
-        }
+        // response: {
+        //   code: 200,
+        //   success: true,
+        //   data: createMachineList()
+        // }
       }).as('getList');
       cy.visit('/#/device/list/list');
       cy.wait('@getList');
@@ -150,14 +150,7 @@ context('设备管理', function() {
           tenant_id: R.integer(1, 1000)
         })
       }
-      cy.route('get', /state\/list/, {
-        code: 200,
-        success: true,
-        data: {
-          statis,
-          list
-        }
-      }).as('getList');
+      cy.route('get', /state\/list/).as('getList');
       cy.visit('/#/device/state');
       cy.wait('@getList')
     });

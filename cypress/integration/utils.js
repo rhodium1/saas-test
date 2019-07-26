@@ -29,9 +29,9 @@ export function dateRange(label) {
 export function address(label) {
   cy.contains(label).parent().find('input').click({force: true});
   cy.get('div[x-placement]').within(() => {
-    cy.contains('北京市').click();
-    cy.contains('市辖区').click();
-    cy.contains('东城区').click();
+    cy.contains('河北省').click();
+    cy.contains('石家庄市').click();
+    cy.contains('长安区').click();
   })
 }
 
