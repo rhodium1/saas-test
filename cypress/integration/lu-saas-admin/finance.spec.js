@@ -271,7 +271,7 @@ context('资金对账', function() {
         expect(query.size).to.eq('15');
       });
     });
-    it('导出excel', function() {
+    it.skip('导出excel', function() {
       cy.server();
       cy.route('get', /tenant\/settle/).as('getList');
       cy.route('get',/export\/tenant_excel/).as('exportExcel')
@@ -312,4 +312,29 @@ context('资金对账', function() {
       cy.wait('@getLogList');
     })
   });
+})
+
+context('冒烟', function() {
+  context('支付代收', function() {
+    beforeEach( function() {
+      cy.server();
+      cy.route('get', /payment\/collection/).as('getList');
+      cy.visit('/#/finance/checking/payment');
+      cy.wait('@getList');
+    });
+    it('订单号支持精确搜索', function() {
+      cy.get('input[placeholder=请输入订单号]').type('12332323', {force: true});
+      cy.contains('搜索').click();
+      cy.wait('@getList').then(xhr => {
+        let query = Util.getQuery(xhr.url);
+        expect(query.search).to.eq('12332323');
+        expect(query).to.have.property('start_day');
+      })
+    });
+    // it('订单类筛选', function() {
+    //   cy.get('input[placeholder=请选择订单类型]').click();
+    //   let index = R.integer()
+    //   cy.get('div[x-placement]').find('li')
+    // });
+  })
 })
