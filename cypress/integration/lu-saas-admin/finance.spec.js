@@ -179,9 +179,35 @@ context('结算管理', function() {
 });
 context('资金对账', function() {
   context('账户总览', function() {
-    it('显示正确', function() {
+    it.only('显示正确', function() {
       cy.server();
-      cy.route('get', /account\/pandect/).as('getPandect');
+      let mockData = {
+        success: true,
+        code: 200,
+        data: {
+          statis: {
+            account_balance: 1,
+            divide_summary: 1
+          },
+          account_log: {
+            num: 10,
+            list: [
+              {
+                settlement_tiem: 12,
+                settlement_money: 200,
+                tenant_name: R.cname(),
+                gathering_account: {
+                  bank: '银行',
+                  bank_account: 123,
+                  payee: R.cname(),
+                },
+                settlement_state: '已结算完成'
+              }
+            ]
+          }
+        }
+      }
+      cy.route('get', /account\/pandect/, mockData).as('getPandect');
       cy.visit('/#/finance/checking/overview');
       let money, share;
       cy.wait('@getPandect').then(xhr => {

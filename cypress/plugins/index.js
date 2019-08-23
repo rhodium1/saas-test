@@ -20,6 +20,6 @@ module.exports = (on, config) => {
     adminqa: 'http://general-qa.icjl.net',
     saasqa: 'http://agent-qa.icjl.net'
   };
-  config.baseUrl = urlMap[env];
+  config.baseUrl = urlMap[env] || '';
   return config;
 }

@@ -16,7 +16,7 @@ context("test", () => {
     // cy.visit();
     cy.visit('');
     cy.server();
-    cy.get("input[placeholder=请输入手机号]").type("13922222224", {
+    cy.get("input[placeholder=请输入手机号]").type("15010601654", {
       force: true
     });
     cy.get("input[placeholder=密码]").type("abcd1234", {force: true});

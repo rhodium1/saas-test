@@ -10,7 +10,7 @@ import * as Util from '../utils';
  */
 function share(label, money, percent) {
   let inputs = cy.contains(label).parent().find('input').as('inputs');
-  cy.get('@inputs').eq(1).type(money, {force: true});
+  cy.get('@inputs').eq(1).clear().type(money, {force: true});
   cy.get('@inputs').eq(2).type(percent, {force: true});
 }
 
@@ -55,7 +55,7 @@ context("场地管理", function() {
   });
 
 
-  it('新建场地, 选择单体，随机条数比例', function() {
+  it.skip('新建场地, 选择单体，随机条数比例', function() {
     cy.server();
     cy.route('post', /yard\/add/).as('addYard');
     cy.route('get', /yard\/list/).as('getYardList');
@@ -76,7 +76,7 @@ context("场地管理", function() {
     let len = R.integer(1, 10);
     share('分成比例1', 10, 10);
     for(let i = 0; i < len; i++) {
-      cy.get('span.plus-words').first().click();
+      cy.get('span.el-icon-plus').first().click();
       share('分成比例' + (i + 2), 100 * (i + 1), (50 + i));
     }
     cy.contains('保存').click();
@@ -88,6 +88,41 @@ context("场地管理", function() {
     cy.get('#area > div > div:nth-child(4)').contains(title);
     cy.contains(title);
   });
+  it.only('新建场地, 选择单体，随机条数比例,随机数值', function() {
+    cy.server();
+    cy.route('post', /yard\/add/).as('addYard');
+    cy.route('get', /yard\/list/).as('getYardList');
+    cy.visit('/#/configs/area/list');
+    cy.contains(' 新建场地').click({ force: true });
+    cy.get("form.el-form").contains('运营商').parent().find('input').click({force: true});
+    cy.get('div[x-placement]').within(() => {
+      cy.get('li.el-select-dropdown__item').eq(0).click();
+    });
+    let title = R.ctitle();
+    Util.type('场地名称', title);
+    Util.radio('类型', '单体');
+    Util.address("省市区");
+    Util.type('详细地址', R.county());
+    Util.type('联系人', R.cname());
+    Util.type('联系电话', '13322466923');
+    Util.type('商圈', R.ctitle());
+    let len = R.integer(1, 10);
+    for(let i = 0; i < len; i++) {
+      cy.get('span.el-icon-plus').first().click();
+    }
+    for(let i = 0; i < len; i++) {
+      share('分成比例' + (i + 1), R.integer(0, 80000), R.integer(0, 10000));
+    }
+    cy.contains('保存').click();
+    cy.wait('@addYard');
+    cy.wait('@getYardList');
+    cy.get('input[placeholder=请输入场地名称]').type(title, {force: true});
+    cy.contains('查询').click();
+    cy.wait('@getYardList');
+    cy.get('#area > div > div:nth-child(4)').contains(title);
+    cy.contains(title);
+  });
+
   // it('新建场地后，编辑场地，带入初始数据', function() {
   //   cy.server();
   //   cy.route('post', /yard\/add/).as('addYard');
@@ -271,7 +306,7 @@ context("场地管理", function() {
     }
 
   });
-  it.only('解绑机器', function() {
+  it('解绑机器', function() {
     cy.server();
     cy.route('get', /yard\/list/).as('getYardList');
     cy.route('get', /yard\/machine_list/).as('getMachineList');

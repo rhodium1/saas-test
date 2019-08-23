@@ -5,8 +5,10 @@
   "main": "index.js",
   "scripts": {
     "saas:dev": "cypress open --env env=saaslocal",
+    "saas:qa": "cypress open --env env=saasqa",
     "admin:dev": "cypress open --env env=adminlocal",
-    "admin:qa": "cypress open --env env-qa"
+    "admin:qa": "cypress open --env env-qa",
+    "admob": "cypress open"
   },
   "author": "",
   "license": "ISC",
